@@ -1,29 +1,13 @@
-import httplib, uuid
-import simplejson as json
-
-class Collectd(object):
-    @classmethod
-    def post(cls, environ, start_response):
-        body = environ['wsgi.input'].readlines()
-        for ds in json.loads(''.join(body)):
-            uid = str(uuid.uuid4())
-            uri = "/collectd/%s" % uid
-            conn = httplib.HTTPConnection("127.0.0.1", 5984)
-            conn.request("PUT", uri, json.dumps(ds))
-            res = conn.getresponse()
-
-        response_headers = [('Content-type', 'text/plain')]
-        status = '200 OK'
-
-        start_response(status, response_headers)
-        yield ''
-
+""" core.py - Core objects of purest."""
+from purest.app import collectd
 
 class URIHandler(object):
+    """Manage all uri/method routes."""
     @classmethod
     def parse(cls, uri, method):
+        """Take a uri and method and parse the the Map object for the right handler."""
         if uri == '/collectd/data' and method == "POST":
-            return Collectd.post
+            return collectd.Collectd.post
         else:
             return URIHandler.fourofour
 
@@ -48,3 +32,6 @@ class WSGI(object):
     def __iter__(self):
         handler =  URIHandler.parse(self.environ['PATH_INFO'], self.environ['REQUEST_METHOD'])
         return handler(self.environ, self.start_response)
+
+    def __call__(self):
+        pass
