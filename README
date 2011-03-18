@@ -41,7 +41,7 @@ Create the database called 'collectd'.
 
 Start the wsgi application::
 
-    $ gunicorn --debug -b 127.0.0.1:9797 purest.WSGI
+    $ gunicorn --debug -b 127.0.0.1:9797 purest.core:WSGI
 
 This is a minimal config file for collectd::
 
