@@ -1,0 +1,107 @@
+About
+=====
+
+About
+=====
+
+`purest` is a simple implementation of a WSGI application geared towards easy
+implementation of REST based applications. Each REST application implements a
+concrete strategy by mapping URI paths and HTTP methods to callables. It does
+basicaly two things:
+
+1) For each incoming HTTP request serialize the WSGI environment and call the
+   :py:meth:`URIHandler.parse` callable. This method parses the path and
+   determines the right application handler.
+2) A mechanism for applications to register url+method to handler mappings.
+   Applications should export a list of dictionaries containing a triple of
+   URI, http method and the callable as endpoint. The
+   :py:meth:`URIHandler.map` method rebuilds an internal :py:class:`Map`
+   objects, that is a list of these tripels.
+
+License
+=======
+
+This software is under the GPLv3 license. See the file `License` that comes
+with this distribution for a copy of it.
+
+Install
+=======
+
+But you can try it the following way on your laptop::
+
+    $ sudo apt-get install couchdb collectd-core
+    $ sudo pip install gunicorn
+    $ cd purest
+    $ python2.7 setup.py install
+    $ couchdb
+
+    
+Browse to http://127.0.0.1:5984/_utils and click on 'Create Database'.
+Create the database called 'collectd'.
+
+Start the wsgi application::
+
+    $ gunicorn --debug -b 127.0.0.1:9797 purest.WSGI
+
+This is a minimal config file for collectd::
+
+    FQDNLookup true
+    Interval 30
+    LoadPlugin syslog
+
+    <Plugin syslog>
+            LogLevel info
+    </Plugin>
+
+    LoadPlugin battery
+    LoadPlugin cpu
+    LoadPlugin df
+    LoadPlugin disk
+    LoadPlugin entropy
+    LoadPlugin interface
+    LoadPlugin irq
+    LoadPlugin load
+    LoadPlugin memory
+    LoadPlugin processes
+    LoadPlugin rrdtool
+    LoadPlugin swap
+    LoadPlugin users
+    LoadPlugin write_http
+
+    <Plugin "write_http">
+      <URL "http://127.0.0.1:9797/collectd/data">
+         Format "JSON"
+         #User "collectd"
+         #Password "weCh3ik0"
+      </URL>
+    </Plugin>
+
+    <Plugin disk>
+            Disk "/sda[1-9]/"
+    </Plugin>
+
+Run the collectd daemon::
+
+    $ sudo collectd -C /etc/collectd/collectd.conf -f
+    
+Thats it. It should start to fill the db with documents. To retrieve
+values you can create map-reduce views:
+
+Browse to http://127.0.0.1:5984/_utils/database.html?collectd/_all_docs
+and click in the views selector on temporary_view. Add the following
+function and click 'Run'. Replace sda8 with whatever name of your disk
+partition::
+
+    function(doc) {
+      if (doc.type == "disk_ops" && doc.plugin_instance == "sda") {
+        emit(doc.time, doc.values);
+      }
+    }
+
+This gives you a list values for read/write disk operations. Temporary views
+are not very performant. You can create a permanent design view by clicking
+save.
+
+My idea is to mangle the data using these map/reduce views and query
+them from a javascript function. Libraries like protovis can read out
+the key/values and draw their graphs with that.
