@@ -1,9 +1,6 @@
 About
 =====
 
-About
-=====
-
 `purest` is a simple implementation of a WSGI application geared towards easy
 implementation of REST based applications. Each REST application implements a
 concrete strategy by mapping URI paths and HTTP methods to callables. It does
