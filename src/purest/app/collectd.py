@@ -9,7 +9,7 @@ class Collectd(object):
             uid = str(uuid.uuid4())
             uri = "/collectd/%s" % uid
             conn = httplib.HTTPConnection("127.0.0.1", 5984)
-            conn.request("PUT", uri, json.dumps(ds))
+            conn.request("PUT", uri, json.dumps(data_set))
             res = conn.getresponse()
 
         response_headers = [('Content-type', 'text/plain')]

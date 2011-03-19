@@ -1,5 +1,12 @@
 """ core.py - Core objects of purest."""
 from purest.app import collectd
+import httplib, uuid
+import simplejson as json
+
+
+class Request(object):
+    """A dictionary representation of a HTTP request."""
+    pass
 
 class Map(object):
     """Maps between uri/methods and handlers."""
@@ -15,11 +22,16 @@ class Map(object):
         """
         self._routes[uri] = { method: handler }
 
+    @property
+    def routes(self):
+        """Return all stored map routes."""
+        return self._routes
 
 class URIHandler(object):
     """Manage all uri/method routes."""
     def __init__(self):
         self._map = Map()
+        self._map.add('/collectd/data', 'POST', collectd.Collectd.post)
 
     def parse(self, uri, method):
         """Take a uri and method and parse the the Map object for the right handler.i
@@ -27,14 +39,16 @@ class URIHandler(object):
         :param: uri: string
         :param: method: string
         """
-        if uri == '/collectd/data' and method == "POST":
-            return collectd.Collectd.post
-        else:
-            return URIHandler.fourofour
+        #try:
+        self._map.routes[uri][method]
+        #except TypeError:
+        #return URIHandler.fourofour
 
-    def map(self, uri, method):
+        return self._map.routes[uri][method]
+
+    def map(self, uri, method, handler):
         """Map a request using its uri and http method to the right handler."""
-        self._map.add('/collectd/data', 'POST', collectd.Collectd.post)
+        self._map.add(uri, method, handler)
 
     @classmethod
     def fourofour(cls, environ, start_response):
