@@ -37,7 +37,15 @@ class Collectd(object):
             # If the db doesn't exist. Test for a 400 return code.
             if res.status == 404:
                 res = send_message("127.0.0.1", "5984", "/%s" % (db), "PUT")
-                # Add here the view to query the values.
+                view = {
+                        "_id": "_design/basic",
+                        "views": {
+                            "all": {
+                                "map": "function(doc) {\nemit(doc.time, doc.values);\n}"
+                            }
+                        }
+                    }
+                res = send_message("127.0.0.1", "5984", "/%s/_design/basic/" % db, "PUT", json.dumps(view))
                 res = send_message("127.0.0.1", "5984", "/%s/%s" % (db, uid), "PUT", json.dumps(doc))
 
         response_headers = [('Content-type', 'text/plain')]
