@@ -9,9 +9,9 @@ def send_message(host, port, uri, method, body=""):
 
 class Collectd(object):
     @classmethod
-    def post(cls, environ, start_response):
+    def post(cls, request, start_response):
         """Post a new (time,[values,]) tuple to the backend."""
-        body = environ['wsgi.input'].readlines()
+        body = request['wsgi.input'].readlines()
         #couchserver = couchdb.client.Server()
         for data_set in json.loads(''.join(body)):
             uid = str(uuid.uuid4())
