@@ -15,7 +15,7 @@ class Collectd(object):
         #couchserver = couchdb.client.Server()
         for data_set in json.loads(''.join(body)):
             uid = str(uuid.uuid4())
-            db = "%s-%s_%s-%s_%s" % ('_'.join(data_set['host'].split('.')), 
+            db = "%s-%s-%s-%s-%s" % ('_'.join(data_set['host'].split('.')), 
                     data_set['plugin'], data_set['plugin_instance'], 
                     data_set['type'], data_set['type_instance'])
 
