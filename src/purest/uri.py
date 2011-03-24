@@ -15,10 +15,10 @@ class UriPattern(object):
             kwargs = match.groupdict()
 
             try:
-                return self._handlers[method]
+                return (self._handlers[method], kwargs)
             except KeyError:
                 pass
-        return None
+        return (None, {})
 
 class Map(object):
     """Maps between uri/methods and handlers."""
@@ -36,12 +36,13 @@ class Map(object):
     def resolve(self, path, method):
         """Iterate over the routes and return the first match."""
         match = None
+        kwargs = {}
         for i in self._routes:
-            match = i.resolve(path, method)
+            match, kwargs = i.resolve(path, method)
             if match != None:
                 break
 
-        return match
+        return (match, kwargs)
 
     @property
     def routes(self):

@@ -64,8 +64,9 @@ class URIHandler(object):
         self._map = Map()
 
         # Just for convenience, needs to be moved into the app modules
-        self._map.add(r'/collectd/data', {'POST': collectd.Collectd.post})
-        self._map.add(r'/metrics/(?P<host>[\w]+)/$', {'GET': metrics.Collection.all})
+        self._map.add(r'^/collectd/data', {'POST': collectd.Collectd.post})
+        self._map.add(r'^/metrics/(?P<host>[\w]+)/(?P<plugin>[\w]+)/(?P<plugin_instance>[\w]+)/(?P<type>[\w]+)/(?P<type_instance>[\w]+)/$', 
+                {'GET': metrics.Collection.all})
 
     def parse(self, request):
         """Take a uri and method and parse the the Map object for the right handler.
@@ -103,10 +104,10 @@ class WSGI(object):
     def __iter__(self):
         # Create a new parser and parse the request.
         parser = URIHandler()
-        handler =  parser.parse(self.request)
+        handler, kwargs =  parser.parse(self.request)
 
         if handler:
-            return handler(self.request, self.start_response)
+            return handler(self.request, kwargs, self.start_response)
         else:
             return URIHandler.fourofour(self.start_response)
 

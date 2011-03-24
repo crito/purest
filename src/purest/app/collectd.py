@@ -9,7 +9,7 @@ def send_message(host, port, uri, method, body=""):
 
 class Collectd(object):
     @classmethod
-    def post(cls, request, start_response):
+    def post(cls, request, kwargs, start_response):
         """Post a new (time,[values,]) tuple to the backend."""
         body = request['wsgi.input'].readlines()
         #couchserver = couchdb.client.Server()
