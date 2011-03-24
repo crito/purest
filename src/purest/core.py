@@ -2,8 +2,8 @@
 from UserDict import DictMixin
 from purest.app import collectd, metrics
 from purest.uri import Map
-import httplib, uuid
-import simplejson as json
+#import httplib, uuid
+#import simplejson as json
 
 
 class Request(DictMixin):
@@ -66,16 +66,16 @@ class URIHandler(object):
         # Just for convenience, needs to be moved into the app modules
         self._map.add(r'^/collectd/data', {'POST': collectd.Collectd.post})
         self._map.add(r'^/metrics/all_dbs', {'GET': metrics.Collection.all})
-        self._map.add(r'^/metrics/(?P<host>[\w]+)/(?P<plugin>[\w]+)/(?P<plugin_instance>[\w]+)/(?P<type>[\w]+)/(?P<type_instance>[\w]+)/$', 
+        self._map.add(r'^/metrics/(?P<host>[\w]+)/(?P<plugin>[\w]+)/(?P<plugin_instance>[\w]+)/(?P<type>[\w]+)/(?P<type_instance>[\w]+)/$',
                 {'GET': metrics.Collection.all})
 
     def parse(self, request):
         """Take a uri and method and parse the the Map object for the right handler.
 
-        :param: uri: string
-        :param: method: string
+        :param uri: string
+        :param method: string
+        :rtype: A tupel containing the handler and regex groups (handler, kwargs).
         """
-
         #try:
         match = self._map.resolve(request['path'], request['method'])
         #except TypeError:
