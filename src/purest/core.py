@@ -1,6 +1,7 @@
 """ core.py - Core objects of purest."""
 from UserDict import DictMixin
-from purest.app import collectd
+from purest.app import collectd, metrics
+from purest.uri import Map
 import httplib, uuid
 import simplejson as json
 
@@ -56,50 +57,36 @@ class Request(DictMixin):
         '''Return all variable names.'''
         return self._req.keys()
 
-class Map(object):
-    """Maps between uri/methods and handlers."""
-    def __init__(self):
-        self._routes = {}
-
-    def add(self, uri, method, handler):
-        """Add a new route to the map.
-
-        :param: uri: string
-        :param: method: string
-        :param: handler: callable
-        """
-        self._routes[uri] = { method: handler }
-
-    @property
-    def routes(self):
-        """Return all stored map routes."""
-        return self._routes
 
 class URIHandler(object):
     """Manage all uri/method routes."""
     def __init__(self):
         self._map = Map()
-        self._map.add('/collectd/data', 'POST', collectd.Collectd.post)
+
+        # Just for convenience, needs to be moved into the app modules
+        self._map.add(r'/collectd/data', {'POST': collectd.Collectd.post})
+        self._map.add(r'/metrics/(?P<host>[\w]+)/$', {'GET': metrics.Collection.all})
 
     def parse(self, request):
-        """Take a uri and method and parse the the Map object for the right handler.i
+        """Take a uri and method and parse the the Map object for the right handler.
 
         :param: uri: string
         :param: method: string
         """
+
         #try:
-        self._map.routes[request['path']][request['method']]
+        match = self._map.resolve(request['path'], request['method'])
         #except TypeError:
         #return URIHandler.fourofour
 
-        return self._map.routes[request['path']][request['method']]
+        return match
 
     def map(self, uri, method, handler):
         """Map a request using its uri and http method to the right handler."""
         self._map.add(uri, method, handler)
 
     @classmethod
-    def fourofour(cls, environ, start_response):
+    def fourofour(cls, start_response):
         response_headers = [('Content-type', 'text/plain')]
         status = '404 Not Found'
 
@@ -117,7 +104,11 @@ class WSGI(object):
         # Create a new parser and parse the request.
         parser = URIHandler()
         handler =  parser.parse(self.request)
-        return handler(self.request, self.start_response)
+
+        if handler:
+            return handler(self.request, self.start_response)
+        else:
+            return URIHandler.fourofour(self.start_response)
 
     def __call__(self):
         pass
