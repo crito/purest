@@ -27,14 +27,11 @@ Install
 But you can try it the following way on your laptop::
 
     $ sudo apt-get install couchdb collectd-core
+    $ couchdb                                       # -> runs in foreground
     $ sudo pip install gunicorn
+    $ git clone git://github.com/crito/purest.git
     $ cd purest
     $ python2.7 setup.py install
-    $ couchdb
-
-    
-Browse to http://127.0.0.1:5984/_utils and click on 'Create Database'.
-Create the database called 'collectd'.
 
 Start the wsgi application::
 
@@ -81,24 +78,98 @@ Run the collectd daemon::
 
     $ sudo collectd -C /etc/collectd/collectd.conf -f
     
-Thats it. It should start to fill the db with documents. To retrieve
-values you can create map-reduce views:
+Thats it. It should start to fill the db with documents. Each collection is
+stored in a seperate database. Each collection is identified by the following
+five parts::
 
-Browse to http://127.0.0.1:5984/_utils/database.html?collectd/_all_docs
-and click in the views selector on temporary_view. Add the following
-function and click 'Run'. Replace sda8 with whatever name of your disk
-partition::
+    hostname-plugin-plugin_instance-type-type_instance
 
-    function(doc) {
-      if (doc.type == "disk_ops" && doc.plugin_instance == "sda") {
-        emit(doc.time, doc.values);
-      }
+    eg: fenix_30loops_net-df--df-boot  
+
+        fenix_30loops_net   ==> Hostname
+        df                  ==> Plugin
+                            ==> Plugin Instance (If not set, it stays empty
+        df                  ==> Type
+        boot                ==> Type Instance
+
+With the creation of each database a basic catch all view is added alongside::
+
+    curl -X GET http://127.0.0.1:5984/fenix_30loops_net-df--df-boot/_design/basic/_view/all 
+
+The `startkey` and `endkey` parameters can be aplied to the URI. See the
+couchdb documentation for more information.
+
+URI Strategies
+==============
+
+Currently there are 2 strategies implemented:
+
+#) **collectd** - Collectd can post its values as json messages
+#) **metrics** - Retrieve collections as key/value tables.
+
+URI's
+=====
+
+:: 
+
+    POST /collectd/data/  -> Parse a list of collected values and store them in the
+                             backend
+    GET /metrics/all_dbs/ -> Retrieve the collection structure in a
+                             hierarchical JSON object
+    GET /metrics/<host>/<plugin>/<plugin_instance>/<type>/<type_instance>/
+                          -> Retrieve a specific collection. Return type can
+                             also be a list of collections. If a part of the
+                             URI is replaced with a '-', all sub nodes of its
+                             parent node are added to the return list. 
+
+
+    [crito@fenix.30loops.net:~] (0) % curl -X GET http://127.0.0.1:9797/metrics/all_dbs 
+    {"fenix.30loops.net": 
+         "processes": 
+            {"-": 
+                {"fork_rate": 
+                    {"-": []}, 
+                 "ps_state": 
+                    {"running": [], "sleeping": [], "paging": [], "stopped": [], "zombies": [], "blocked": []}
+                 }
+            }, 
+         "memory": 
+            {"-": 
+                {"memory": 
+                    {"cached": [], "buffered": [], "used": [], "free": []}
+                }
+            }, 
+         "interface": 
+            {"-": 
+                {"if_packets": 
+                    {"lo": [], "pan0": [], "irda0": [], "wlan0": [], "eth0": []}, 
+                 "if_errors": 
+                    {"lo": [], "pan0": [], "irda0": [], "wlan0": [], "eth0": []}, 
+                 "if_octets": 
+                    {"lo": [], "pan0": [], "irda0": [], "wlan0": [], "eth0": []}
+                }
+            }, 
+         "disk": 
+            {"sda5": 
+                {"disk_merged": 
+                    {"-": []}, 
+                 "disk_ops": 
+                    {"-": []}, 
+                 "disk_time": 
+                    {"-": []}, 
+                 "disk_octets": 
+                    {"-": []}
+                }, 
+             }, 
+          "cpu": 
+            {"1": 
+                {"cpu": 
+                    {"softirq": [], "system": [], "idle": [], "user": [], "interrupt": [], "nice": [], "steal": [], "wait": []}
+                }, 
+             "0": 
+                {"cpu": 
+                    {"softirq": [], "system": [], "idle": [], "user": [], "interrupt": [], "wait": [], "steal": [], "nice": []}
+                }
+            }
+        }
     }
-
-This gives you a list values for read/write disk operations. Temporary views
-are not very performant. You can create a permanent design view by clicking
-save.
-
-My idea is to mangle the data using these map/reduce views and query
-them from a javascript function. Libraries like protovis can read out
-the key/values and draw their graphs with that.
