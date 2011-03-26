@@ -2,8 +2,6 @@
 from UserDict import DictMixin
 from purest.app import collectd, metrics
 from purest.uri import Map
-#import httplib, uuid
-#import simplejson as json
 
 
 class Request(DictMixin):
@@ -19,10 +17,11 @@ class Request(DictMixin):
                 self._req[key.lower()] = value
 
     def __getitem__(self, key):
-        """Return the value of the given key. 
+        """Return the value of the given key.
 
         Raises `KeyError` if not existing.'''
-        :param: key: string
+        :param key: string, Key to look up
+        :rtype: return the value of the key
         """
         try:
             value = self._req[key]
@@ -34,15 +33,15 @@ class Request(DictMixin):
     def __setitem__(self, key, value):
         """Set a variable.
 
-        :param: key: string
-        :param: value: string
+        :param key: string
+        :param value: string
         """
         self._req[key] = value
 
     def __delitem__(self, key):
         """Delete a variable.
 
-        :param: key: string
+        :param key: string
         """
         try:
             del self._req[key]
@@ -50,11 +49,13 @@ class Request(DictMixin):
             raise KeyError
 
     def __iteritems__(self):
-        """Return all key value pairs as an iterator."""
+        """Return all key value pairs as an iterator.
+
+        :rtype: Return tuples of key/values."""
         return self._req.iteritems()
 
     def keys(self):
-        '''Return all variable names.'''
+        """Return all variable names."""
         return self._req.keys()
 
 
@@ -66,14 +67,15 @@ class URIHandler(object):
         # Just for convenience, needs to be moved into the app modules
         self._map.add(r'^/collectd/data', {'POST': collectd.Collectd.post})
         self._map.add(r'^/metrics/all_dbs', {'GET': metrics.Collection.all})
-        self._map.add(r'^/metrics/(?P<host>[\w]+)/(?P<plugin>[\w]+)/(?P<plugin_instance>[\w]+)/(?P<type>[\w]+)/(?P<type_instance>[\w]+)/$',
+        self._map.add(
+                r'^/metrics/(?P<host>[\w]+)/(?P<plugin>[\w]+)/(?P<plugin_instance>[\w]+)/(?P<type>[\w]+)/(?P<type_instance>[\w]+)/$',
                 {'GET': metrics.Collection.all})
 
     def parse(self, request):
         """Take a uri and method and parse the the Map object for the right handler.
 
-        :param uri: string
-        :param method: string
+        :param request: The HTTP request.
+        :type request: dictionary
         :rtype: A tupel containing the handler and regex groups (handler, kwargs).
         """
         #try:
@@ -84,11 +86,18 @@ class URIHandler(object):
         return match
 
     def map(self, uri, method, handler):
-        """Map a request using its uri and http method to the right handler."""
+        """Map a request using its uri and http method to the right handler.
+
+        :param uri: a path of a uri expressed as a regex
+        :type uri: string
+        :param method: the http method
+        :type string: string
+        """
         self._map.add(uri, method, handler)
 
     @classmethod
     def fourofour(cls, start_response):
+        """Return a 404 status code."""
         response_headers = [('Content-type', 'text/plain')]
         status = '404 Not Found'
 
@@ -105,7 +114,7 @@ class WSGI(object):
     def __iter__(self):
         # Create a new parser and parse the request.
         parser = URIHandler()
-        handler, kwargs =  parser.parse(self.request)
+        handler, kwargs = parser.parse(self.request)
 
         if handler:
             return handler(self.request, kwargs, self.start_response)

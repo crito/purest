@@ -1,7 +1,9 @@
-import httplib, uuid
+import httplib
+import uuid
 import simplejson as json
 import couchdb
 from collections import defaultdict
+
 
 def send_message(host, port, uri, method, body=""):
     conn = httplib.HTTPConnection(host, port)
@@ -43,4 +45,3 @@ class Collection(object):
 
         start_response(status, response_headers)
         yield json.dumps(collection)
-
