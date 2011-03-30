@@ -119,9 +119,12 @@ URI's
     GET /metrics/<host>/<plugin>/<plugin_instance>/<type>/<type_instance>/
                           -> Retrieve a specific collection. Return type can
                              also be a list of collections. If a part of the
-                             URI is replaced with a '-', all sub nodes of its
-                             parent node are added to the return list. 
+                             URI is replaced with a 'x', all sub nodes of its
+                             parent node are added to the return list. If this token 
+                             is not set use 'x' to substitute it.
 
+
+    ## Get the whole collection structure as a nested dictionary
 
     [crito@fenix.30loops.net:~] (0) % curl -X GET http://127.0.0.1:9797/metrics/all_dbs 
     {"fenix.30loops.net": 
@@ -173,3 +176,12 @@ URI's
             }
         }
     }
+
+
+    ## Retrieve a single Database
+
+    crito@mystique:~$ curl -X GET http://127.0.0.1:9797/metrics/mystique/cpu/0/cpu/wait/
+    {"rows": [{"value": [20992], "id": "ed9dac01-e579-4daa-9b2b-653f7c361889", "key": 1301489147}, {"value": [21286], "id": "0bd1c456-a5df-4c75-9e9b-d0ae49e17457", "key": 1301489177}, {"value": [21381], "id": "7e30f0e5-2523-4773-ad7f-28989daa9b82", "key": 1301489207}, {"value": [21628], "id": "c8cab314-53f8-4dfe-9a9f-7ce7faf96744", "key": 1301489237}, {"value": [22045], "id": "10cf5b42-b4cb-4e09-8f33-7801d9dfb04b", "key": 1301492194}, {"value": [22249], "id": "0469e15a-820b-4cdf-9a03-6aab8d52ac70", "key": 1301492457}, {"value": [22387], "id": "acda25a8-160a-469e-b8f1-a1fe1b2cd70c", "key": 1301492515}, {"value": [22505], "id": "f20eca6f-ceee-482d-a949-6f3cbd7dabe7", "key": 1301492726}, {"value": [22638], "id": "84ea6b5c-3386-43c8-90a2-403b5552afd7", "key": 1301492756}, {"value": [22776], "id": "c3904dbc-4399-43e8-8e48-3e78b74a4170", "key": 1301492786}], "total_rows": 10, "offset": 0}
+
+    crito@mystique:~$ curl -X GET http://127.0.0.1:9797/metrics/mystique/disk/md0/disk_ops/x/
+    {"rows": [{"value": [616792, 3372855], "id": "9dc73b9b-0d63-4ea1-966f-f4f7db7b0a19", "key": 1301489208}, {"value": [616792, 3373058], "id": "ea51ff99-02f9-480b-b45d-4e7c083ca25a", "key": 1301489237}, {"value": [617188, 3401497], "id": "6768af77-80fb-49f0-8c81-4bb5d15e2d9a", "key": 1301492786}], "total_rows": 3, "offset": 0}

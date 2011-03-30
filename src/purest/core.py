@@ -69,7 +69,7 @@ class URIHandler(object):
         self._map.add(r'^/metrics/all_dbs', {'GET': metrics.Collection.all})
         self._map.add(
                 r'^/metrics/(?P<host>[\w]+)/(?P<plugin>[\w]+)/(?P<plugin_instance>[\w]+)/(?P<type>[\w]+)/(?P<type_instance>[\w]+)/$',
-                {'GET': metrics.Collection.all})
+                {'GET': metrics.Collection.filter})
 
     def parse(self, request):
         """Take a uri and method and parse the the Map object for the right handler.

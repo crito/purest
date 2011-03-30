@@ -15,9 +15,9 @@ setup(
         license = "GPL v3",
         author = "Christo Buschek",
         author_email = "crito@30loops.net",
-        description = "A thin WSGI wrapper to store collectd data sets in couchdb",
+        description = "A thin WSGI wrapper to store and retrieve collectd data sets in couchdb",
         long_description = read('README'),
-        install_requires = [ 'distribute', 'gunicorn' ],
+        install_requires = [ 'distribute', 'gunicorn', 'simplejson', 'couchdb' ],
         classifiers = [
             'Development Status :: 4 - Beta',
             'Framework :: Django',
